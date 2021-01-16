@@ -72,11 +72,11 @@ variables:
   value: evmcoe/devsecops:secret_scanning
 
 stages:
-- stage: Build
-  displayName: DevSecOps
+- stage: CI
+  displayName: CI
   jobs:  
-  - job: Build
-    displayName: Build
+  - job: SecurityScan
+    displayName: Security Scan
     pool:
       vmImage: ubuntu-latest
     steps:
