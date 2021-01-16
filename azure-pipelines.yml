@@ -31,4 +31,4 @@ stages:
         script: |
           docker -v
           
-          echo $(Date:yyyy-MM-dd)
+          echo $(Date:yyyyMMdd)
