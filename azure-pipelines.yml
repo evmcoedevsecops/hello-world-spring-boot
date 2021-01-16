@@ -61,10 +61,6 @@ parameters:
   type: string
   default: http://demo.testfire.net/logout.jsp
 
-- name: SCAN_DATE
-  type: string
-  default: '2021-01-16'
-
 - name: DASHBOARD_URL
   type: string
   default: 'http://13.127.184.231:8080'
@@ -116,4 +112,4 @@ stages:
       condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'SECRET' )
       inputs:
         script: |
-          docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
+          docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} ${{ variables.secret_scan_image }}
