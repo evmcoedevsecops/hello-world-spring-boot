@@ -31,4 +31,4 @@ stages:
         script: |
           docker -v
           
-          echo Hello world
+          echo $(Date:yyyy-MM-dd)
