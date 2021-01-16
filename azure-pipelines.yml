@@ -1,6 +1,10 @@
 # Dockerized Pipeline for DevSecOps
 
 parameters:
+- name: DEVSECOPS_SERVICE_LIST
+  type: string
+  default: 'SECRET,SCA,SAST,IMAGE,INFRA,DAST'
+  
 - name: APPLICATION_NAME
   type: string
   default: Sample_Java_Application
@@ -59,11 +63,12 @@ parameters:
 
 - name: SCAN_DATE
   type: string
-  default: "2021-01-16"
+  default: '2021-01-16'
 
 - name: DASHBOARD_URL
   type: string
-  default: "http://13.127.184.231:8080"
+  default: 'http://13.127.184.231:8080'
+  
 
 
 
@@ -95,11 +100,11 @@ variables:
 stages:
 - stage: CI
   displayName: CI
-  pool:
+  jobs:  
+  - job: SecurityScan
+    displayName: Security Scan
+    pool:
       vmImage: ubuntu-latest
-  jobs: 
-  - job: secretscan1
-    displayName: Secret Scan1
     steps:
     - task: Docker@2
       displayName: Docker login
@@ -108,29 +113,7 @@ stages:
         command: 'login'
     - task: CmdLine@2
       displayName: Secret Scan
+      condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'SAST' )
       inputs:
         script: |
           docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
-  - job: secretscan2
-    displayName: Secret Scan2
-    dependsOn: secretscan1
-    steps:
-    - task: Docker@2
-      displayName: Docker login
-      inputs:
-        containerRegistry: 'Docker Hub Service Connection'
-        command: 'login'
-    - task: CmdLine@2
-      displayName: Secret Scan
-      inputs:
-        script: |
-          docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
-  - job: cleanup
-    displayName: Cleanup Task
-    dependsOn: secretscan2
-    steps:
-    - task: Docker@2
-      displayName: Docker logout
-      inputs:
-        command: 'logout'
-    
