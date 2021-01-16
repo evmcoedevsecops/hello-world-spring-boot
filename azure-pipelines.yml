@@ -98,18 +98,14 @@ stages:
   pool:
       vmImage: ubuntu-latest
   jobs: 
-  - job: envsetup
-    displayName: Environment Setup
+  - job: secretscan1
+    displayName: Secret Scan1
     steps:
     - task: Docker@2
       displayName: Docker login
       inputs:
         containerRegistry: 'Docker Hub Service Connection'
         command: 'login'
-  - job: secretscan1
-    displayName: Secret Scan1
-    dependsOn: envsetup
-    steps:
     - task: CmdLine@2
       displayName: Secret Scan
       inputs:
@@ -119,6 +115,11 @@ stages:
     displayName: Secret Scan2
     dependsOn: secretscan1
     steps:
+    - task: Docker@2
+      displayName: Docker login
+      inputs:
+        containerRegistry: 'Docker Hub Service Connection'
+        command: 'login'
     - task: CmdLine@2
       displayName: Secret Scan
       inputs:
