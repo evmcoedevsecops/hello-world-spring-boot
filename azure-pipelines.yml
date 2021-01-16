@@ -2,6 +2,65 @@
 # Build a Docker image 
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
+parameters:
+- name: APPLICATION_NAME
+  type: string
+  default: Sample_Java_Application
+
+- name: SCM_URL
+  type: string
+  default: https://github.com/evmcoedevsecops/hello-world-spring-boot.git
+
+- name: BRANCH
+  type: string
+  default: master
+
+- name: TECHNOLOGY
+  type: string
+  default: Java
+  values:
+  - Java
+  - .Net
+  - Python
+  - JavaScript
+
+- name: VERSION
+  type: number
+  default: 8
+  values:
+  - 8
+  - 11
+
+- name: DAST_AUTH_URL
+  type: string
+  default: https://demo.testfire.net/login.jsp
+
+- name: DAST_USERNAME
+  type: string
+  default: admin
+
+- name: DAST_PASSWORD
+  type: string
+  default: admin
+
+- name: DAST_USERNAME_FIELD
+  type: string
+  default: uid
+  
+- name: DAST_PASSWORD_FIELD
+  type: string
+  default: passw
+
+- name: DAST_AUTH_EXCLUDE_URLS
+  type: string
+  default: http://demo.testfire.net/logout.jsp
+
+- name: SCAN_DATE
+  type: string
+  default: "2021-01-16"
+
+
+
 trigger:
 - main
 
@@ -9,7 +68,8 @@ resources:
 - repo: self
 
 variables:
-  tag: '$(Build.BuildId)'
+- name: secret_scan_image
+  value: evmcoe/devsecops:secret_scanning
 
 stages:
 - stage: Build
@@ -18,7 +78,7 @@ stages:
   - job: Build
     displayName: Build
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: ubuntu-latest
     steps:
     - task: Docker@2
       displayName: Docker login
@@ -29,6 +89,4 @@ stages:
       displayName: Secret Scan
       inputs:
         script: |
-          docker -v
-          
-          docker run --network host -e branch=master -e git_url=https://github.com/evmcoedevsecops/hello-world-spring-boot -e scan_start_date=2021-01-16 evmcoe/devsecops:secret_scanning
+          docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
