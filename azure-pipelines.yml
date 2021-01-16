@@ -113,7 +113,7 @@ stages:
         command: 'login'
     - task: CmdLine@2
       displayName: Secret Scan
-      condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'SAST' )
+      condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'SECRET' )
       inputs:
         script: |
           docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
