@@ -1,6 +1,10 @@
 # Dockerized Pipeline for DevSecOps
 
 parameters:
+- name: DEVSECOPS_SERVICE_LIST
+  type: string
+  default: 'SECRET,SCA,SAST,IMAGE,INFRA,DAST'
+
 - name: APPLICATION_NAME
   type: string
   default: Sample_Java_Application
@@ -94,7 +98,7 @@ variables:
 
 stages:
 - stage: CI
-  displayName: CI
+  displayName: Build
   jobs:  
   - job: SecurityScan
     displayName: Security Scan
@@ -107,13 +111,13 @@ stages:
         containerRegistry: 'Docker Hub Service Connection'
         command: 'login'
     - task: CmdLine@2
-      displayName: DAST
+      displayName: Secret Scan
       inputs:
         script: |
-          echo Starting OWASP ZAP Scan
-          docker run --rm --network host --volume $HOME:/zap/wrk:rw --volume $HOME:/output:rw ${{ variables.dast_scan_image }} /analyze -t ${{ parameters.DAST_AUTH_URL }} --auth-url ${{ parameters.DAST_AUTH_URL }} --auth-username ${{ parameters.DAST_USERNAME }} --auth-password ${{ parameters.DAST_PASSWORD }} --auth-username-field ${{ parameters.DAST_USERNAME_FIELD }} --auth-password-field ${{ parameters.DAST_PASSWORD_FIELD }} --auth-exclude-urls ${{ parameters.DAST_AUTH_EXCLUDE_URLS }} -x report.xml
-          echo OWASP ZAP Scan Completed
-          echo Uploading ZAP scan result to DefectDojo
-          echo $HOME
-          cd $HOME && curl -X POST ${{ parameters.DASHBOARD_URL }}'/api/v2/import-scan/' -H 'accept: application/json' -H 'Authorization: Token 7786e7ff093006dcd2872979fb312b4de6310dd8' -F 'scan_date=${{ parameters.SCAN_DATE }}' -F 'scan_type=ZAP Scan' -F 'engagement=17' -F file=@'report.xml' | jq .
-          echo Scan results uploaded to DefectDojo successfully.
+          docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
+    - task: Docker@2
+      displayName: Docker logout
+      inputs:
+        command: 'logout'
+  - job: JOB2
+    displayName: JOB2
