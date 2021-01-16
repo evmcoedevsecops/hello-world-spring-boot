@@ -97,37 +97,35 @@ stages:
   displayName: CI
   pool:
       vmImage: ubuntu-latest
-  jobs:  
-  - job: SecretScan1
+  jobs: 
+  - job: envsetup
+    displayName: Environment Setup
+    steps:
+    - task: Docker@2
+      displayName: Docker login
+      inputs:
+        containerRegistry: 'Docker Hub Service Connection'
+        command: 'login'
+  - job: secretscan1
     displayName: Secret Scan1
     steps:
-    - task: Docker@2
-      displayName: Docker login
-      inputs:
-        containerRegistry: 'Docker Hub Service Connection'
-        command: 'login'
     - task: CmdLine@2
       displayName: Secret Scan
       inputs:
         script: |
           docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
-    - task: Docker@2
-      displayName: Docker logout
-      inputs:
-        command: 'logout'
-  - job: SecretScan2
+  - job: secretscan2
     displayName: Secret Scan2
+    dependsOn: secretscan1
     steps:
-    - task: Docker@2
-      displayName: Docker login
-      inputs:
-        containerRegistry: 'Docker Hub Service Connection'
-        command: 'login'
     - task: CmdLine@2
       displayName: Secret Scan
       inputs:
         script: |
           docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
+  - job: cleanup
+    displayName: Cleanup Task
+    steps:
     - task: Docker@2
       displayName: Docker logout
       inputs:
