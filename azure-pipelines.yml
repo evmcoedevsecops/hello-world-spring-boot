@@ -71,7 +71,7 @@ resources:
 
 variables:
 - name: secret_scan_image
-  value: evmcoe/devsecops:secret_scanning_az
+  value: evmcoe/devsecops:secret_scanning
 
 stages:
 - stage: CI
