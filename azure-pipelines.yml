@@ -108,6 +108,7 @@ stages:
         command: 'login'
   - job: secretscan1
     displayName: Secret Scan1
+    dependsOn: envsetup
     steps:
     - task: CmdLine@2
       displayName: Secret Scan
@@ -125,6 +126,7 @@ stages:
           docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
   - job: cleanup
     displayName: Cleanup Task
+    dependsOn: secretscan2
     steps:
     - task: Docker@2
       displayName: Docker logout
