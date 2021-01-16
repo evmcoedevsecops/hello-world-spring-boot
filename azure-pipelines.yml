@@ -104,27 +104,7 @@ stages:
         containerRegistry: 'Docker Hub Service Connection'
         command: 'login'
     - task: CmdLine@2
-      displayName: Secret Scan
-      inputs:
-        script: |
-          docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
-    - task: CmdLine@2
-      displayName: Software Composition Analysis
-      inputs:
-        script: |
-          docker run --rm --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.sca_scan_image }}
-    - task: CmdLine@2
-      displayName: SAST
-      inputs:
-        script: |
-          docker run --rm --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.sast_scan_image }}
-    - task: CmdLine@2
       displayName: Securing Image Build
       inputs:
         script: |
-          docker run --rm --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} -e image_name=${{ parameters.APPLICATION_NAME }} ${{ variables.container_scan_image }}
-    - task: CmdLine@2
-      displayName: Securing Platform/Host
-      inputs:
-        script: |
-          docker run -e ip_address=${{ parameters.IP_ADDRESS }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} --network host ${{ variables.infra_scan_image }}
+          docker run --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} -e image_name=${{ parameters.APPLICATION_NAME }} ${{ variables.container_scan_image }}
