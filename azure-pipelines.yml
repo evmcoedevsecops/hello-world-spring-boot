@@ -31,4 +31,4 @@ stages:
         script: |
           docker -v
           
-          echo $(DayOfMonth)-$(Month)-$(Year:yyyy)
+          docker run --network host -e branch=master -e git_url=https://github.com/evmcoedevsecops/hello-world-spring-boot -e scan_start_date=2021-01-16 evmcoe/devsecops:secret_scanning
