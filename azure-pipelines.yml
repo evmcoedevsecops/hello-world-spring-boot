@@ -111,7 +111,7 @@ stages:
       inputs:
         script: |
           echo Starting OWASP ZAP Scan
-          docker run --rm --network host ${{ variables.dast_scan_image }} --volume $(pwd)/wrk:/zap/wrk:rw --volume $(pwd)/wrk:/output:rw evmcoe/devsecops:dast_zap /analyze -t ${{ parameters.DAST_AUTH_URL }} --auth-url ${{ parameters.DAST_AUTH_URL }} --auth-username ${{ parameters.DAST_USERNAME }} --auth-password ${{ parameters.DAST_PASSWORD }} --auth-username-field ${{ parameters.DAST_USERNAME_FIELD }} --auth-password-field ${{ parameters.DAST_PASSWORD_FIELD }} --auth-exclude-urls ${{ parameters.DAST_AUTH_EXCLUDE_URLS }} -x report.xml
+          docker run --rm --network host --volume $(pwd)/wrk:/zap/wrk:rw --volume $(pwd)/wrk:/output:rw ${{ variables.dast_scan_image }} /analyze -t ${{ parameters.DAST_AUTH_URL }} --auth-url ${{ parameters.DAST_AUTH_URL }} --auth-username ${{ parameters.DAST_USERNAME }} --auth-password ${{ parameters.DAST_PASSWORD }} --auth-username-field ${{ parameters.DAST_USERNAME_FIELD }} --auth-password-field ${{ parameters.DAST_PASSWORD_FIELD }} --auth-exclude-urls ${{ parameters.DAST_AUTH_EXCLUDE_URLS }} -x report.xml
           echo OWASP ZAP Scan Completed
           echo current DIR
           pwd
