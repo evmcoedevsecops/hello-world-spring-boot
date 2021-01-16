@@ -66,8 +66,6 @@ parameters:
   default: 'http://13.127.184.231:8080'
   
 
-
-
 trigger:
 - main
 
@@ -120,13 +118,13 @@ stages:
         script: |
           docker run --rm --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} ${{ variables.sca_scan_image }}
     - task: CmdLine@2
-      displayName: SAST
+      displayName: Static Code Analysis
       condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'SAST' )
       inputs:
         script: |
           docker run --rm --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} ${{ variables.sast_scan_image }}
     - task: CmdLine@2
-      displayName: Securing Image Build
+      displayName: Container Image Scan
       condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'IMAGE' )
       inputs:
         script: |
@@ -151,7 +149,7 @@ stages:
         containerRegistry: 'Docker Hub Service Connection'
         command: 'login'
     - task: CmdLine@2
-      displayName: Securing Platform/Host
+      displayName: Platform/Host Scan
       condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'INFRA' )
       inputs:
         script: |
