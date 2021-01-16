@@ -1,10 +1,6 @@
 # Dockerized Pipeline for DevSecOps
 
 parameters:
-- name: DEVSECOPS_SERVICE_LIST
-  type: string
-  default: 'SECRET,SCA,SAST,IMAGE,INFRA,DAST'
-
 - name: APPLICATION_NAME
   type: string
   default: Sample_Java_Application
@@ -92,18 +88,18 @@ variables:
 
 - name: infra_scan_image
   value: evmcoe/devsecops:infra_scan_nmap
-
+  
 - name: dast_scan_image
   value: evmcoe/devsecops:dast_zap
 
 stages:
 - stage: CI
-  displayName: Build
-  jobs:  
-  - job: SecurityScan
-    displayName: Security Scan
-    pool:
+  displayName: CI
+  pool:
       vmImage: ubuntu-latest
+  jobs:  
+  - job: SecretScan1
+    displayName: Secret Scan1
     steps:
     - task: Docker@2
       displayName: Docker login
@@ -119,5 +115,21 @@ stages:
       displayName: Docker logout
       inputs:
         command: 'logout'
-  - job: JOB2
-    displayName: JOB2
+  - job: SecretScan2
+    displayName: Secret Scan2
+    steps:
+    - task: Docker@2
+      displayName: Docker login
+      inputs:
+        containerRegistry: 'Docker Hub Service Connection'
+        command: 'login'
+    - task: CmdLine@2
+      displayName: Secret Scan
+      inputs:
+        script: |
+          docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
+    - task: Docker@2
+      displayName: Docker logout
+      inputs:
+        command: 'logout'
+    
