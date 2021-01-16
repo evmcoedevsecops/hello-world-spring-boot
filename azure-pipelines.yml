@@ -113,12 +113,18 @@ stages:
           echo Starting OWASP ZAP Scan
           docker run --rm --network host --volume $HOME:/zap/wrk:rw --volume $HOME:/output:rw ${{ variables.dast_scan_image }} /analyze -t ${{ parameters.DAST_AUTH_URL }} --auth-url ${{ parameters.DAST_AUTH_URL }} --auth-username ${{ parameters.DAST_USERNAME }} --auth-password ${{ parameters.DAST_PASSWORD }} --auth-username-field ${{ parameters.DAST_USERNAME_FIELD }} --auth-password-field ${{ parameters.DAST_PASSWORD_FIELD }} --auth-exclude-urls ${{ parameters.DAST_AUTH_EXCLUDE_URLS }} -x report.xml
           echo OWASP ZAP Scan Completed
+          echo my user name is
+          whoami
           echo current DIR
+          echo PRINTHOME PATH
+          echo "$HOME"
           pwd
           echo files in current DIR
           ls
           echo files in HOME DIR
           ls /home
+          echo files in /home/VssAdministrator
+          ls /home/VssAdministrator
           echo files in /zap/wrk/
           ls /zap/wrk/
           echo printdefectdojo url
