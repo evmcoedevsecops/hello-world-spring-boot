@@ -1,6 +1,4 @@
-# Docker
-# Build a Docker image 
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+# Dockerized Pipeline for DevSecOps
 
 parameters:
 - name: APPLICATION_NAME
@@ -73,7 +71,7 @@ resources:
 
 variables:
 - name: secret_scan_image
-  value: evmcoe/devsecops:secret_scanning
+  value: evmcoe/devsecops:secret_scanning_az
 
 stages:
 - stage: CI
