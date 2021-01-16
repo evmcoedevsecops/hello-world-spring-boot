@@ -111,14 +111,14 @@ stages:
       inputs:
         script: |
           echo Starting OWASP ZAP Scan
-          docker run --rm --network host  ${{ variables.dast_scan_image }} /analyze -t ${{ parameters.DAST_AUTH_URL }} --auth-url ${{ parameters.DAST_AUTH_URL }} --auth-username ${{ parameters.DAST_USERNAME }} --auth-password ${{ parameters.DAST_PASSWORD }} --auth-username-field ${{ parameters.DAST_USERNAME_FIELD }} --auth-password-field ${{ parameters.DAST_PASSWORD_FIELD }} --auth-exclude-urls ${{ parameters.DAST_AUTH_EXCLUDE_URLS }} -x report.xml
+          docker run --rm --network host  ${{ variables.dast_scan_image }} /analyze -t ${{ parameters.DAST_AUTH_URL }} --auth-url ${{ parameters.DAST_AUTH_URL }} --auth-username ${{ parameters.DAST_USERNAME }} --auth-password ${{ parameters.DAST_PASSWORD }} --auth-username-field ${{ parameters.DAST_USERNAME_FIELD }} --auth-password-field ${{ parameters.DAST_PASSWORD_FIELD }} --auth-exclude-urls ${{ parameters.DAST_AUTH_EXCLUDE_URLS }} -x /home/report.xml
           echo OWASP ZAP Scan Completed
           echo current DIR
           pwd
-          echo files in current dir
-          ls
+          echo files in home dir
+          ls /home
           echo printdefectdojo url
           echo ${{ parameters.DASHBOARD_URL }}'/api/v2/import-scan/'
           echo Uploading ZAP scan result to DefectDojo
-          curl -X POST ${{ parameters.DASHBOARD_URL }}'/api/v2/import-scan/' -H 'accept: application/json' -H 'Authorization: Token 7786e7ff093006dcd2872979fb312b4de6310dd8' -F 'scan_date=${{ parameters.SCAN_DATE }}' -F 'scan_type=ZAP Scan' -F 'engagement=17' -F file=@'report.xml' | jq .
+          curl -X POST ${{ parameters.DASHBOARD_URL }}'/api/v2/import-scan/' -H 'accept: application/json' -H 'Authorization: Token 7786e7ff093006dcd2872979fb312b4de6310dd8' -F 'scan_date=${{ parameters.SCAN_DATE }}' -F 'scan_type=ZAP Scan' -F 'engagement=17' -F file=@'/home/report.xml' | jq .
           echo Scan results uploaded to DefectDojo successfully.
