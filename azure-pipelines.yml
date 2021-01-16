@@ -1,0 +1,153 @@
+# Dockerized Pipeline for DevSecOps
+
+parameters:
+- name: DEVSECOPS_SERVICE_LIST
+  type: string
+  default: 'SECRET,SCA,SAST,IMAGE,INFRA,DAST'
+  
+- name: APPLICATION_NAME
+  type: string
+  default: Sample_Java_Application
+
+- name: SCM_URL
+  type: string
+  default: https://github.com/evmcoedevsecops/hello-world-spring-boot.git
+
+- name: BRANCH
+  type: string
+  default: master
+
+- name: TECHNOLOGY
+  type: string
+  default: Java
+  values:
+  - Java
+  - .Net
+  - Python
+  - JavaScript
+
+- name: VERSION
+  type: number
+  default: 8
+  values:
+  - 8
+  - 11
+
+- name: IP_ADDRESS
+  type: string
+  default: 127.0.0.1
+
+- name: DAST_AUTH_URL
+  type: string
+  default: https://demo.testfire.net/login.jsp
+
+- name: DAST_USERNAME
+  type: string
+  default: admin
+
+- name: DAST_PASSWORD
+  type: string
+  default: admin
+
+- name: DAST_USERNAME_FIELD
+  type: string
+  default: uid
+  
+- name: DAST_PASSWORD_FIELD
+  type: string
+  default: passw
+
+- name: DAST_AUTH_EXCLUDE_URLS
+  type: string
+  default: http://demo.testfire.net/logout.jsp
+
+- name: DASHBOARD_URL
+  type: string
+  default: 'http://13.127.184.231:8080'
+  
+
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+- name: secret_scan_image
+  value: evmcoe/devsecops:secret_scanning
+
+- name: sca_scan_image
+  value: evmcoe/devsecops:sca_owasp_dc
+
+- name: sast_scan_image
+  value: evmcoe/devsecops:sast_spotbugs
+
+- name: container_scan_image
+  value: evmcoe/devsecops:container_scanning_trivy
+
+- name: infra_scan_image
+  value: evmcoe/devsecops:infra_scan_nmap
+  
+- name: dast_scan_image
+  value: evmcoe/devsecops:dast_zap
+
+stages:
+- stage: CI
+  displayName: CI
+  jobs:  
+  - job: CICDSecurityScan
+    displayName: CI/CD-Security Scan
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: Docker@2
+      displayName: Docker login
+      inputs:
+        containerRegistry: 'Docker Hub Service Connection'
+        command: 'login'
+    - task: CmdLine@2
+      displayName: Secret Scan
+      condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'SECRET' )
+      inputs:
+        script: |
+          docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} ${{ variables.secret_scan_image }}
+    - task: CmdLine@2
+      displayName: Software Composition Analysis
+      condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'SCA' )
+      inputs:
+        script: |
+          docker run --rm --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} ${{ variables.sca_scan_image }}
+    - task: CmdLine@2
+      displayName: Static Code Analysis
+      condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'SAST' )
+      inputs:
+        script: |
+          docker run --rm --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} ${{ variables.sast_scan_image }}
+    - task: CmdLine@2
+      displayName: Container Image Scan
+      condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'IMAGE' )
+      inputs:
+        script: |
+          docker run --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e image_name=${{ parameters.APPLICATION_NAME }} ${{ variables.container_scan_image }}
+    - task: CmdLine@2
+      displayName: Platform/Host Scan
+      condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'INFRA' )
+      inputs:
+        script: |
+          docker run -e ip_address=${{ parameters.IP_ADDRESS }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} --network host ${{ variables.infra_scan_image }}
+    - task: CmdLine@2
+      displayName: DAST
+      condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'DAST' )
+      inputs:
+        script: |
+          echo Starting OWASP ZAP Scan
+          docker run --rm --network host --volume $HOME:/zap/wrk:rw --volume $HOME:/output:rw ${{ variables.dast_scan_image }} /analyze -t ${{ parameters.DAST_AUTH_URL }} --auth-url ${{ parameters.DAST_AUTH_URL }} --auth-username ${{ parameters.DAST_USERNAME }} --auth-password ${{ parameters.DAST_PASSWORD }} --auth-username-field ${{ parameters.DAST_USERNAME_FIELD }} --auth-password-field ${{ parameters.DAST_PASSWORD_FIELD }} --auth-exclude-urls ${{ parameters.DAST_AUTH_EXCLUDE_URLS }} -x report.xml
+          echo OWASP ZAP Scan Completed
+          echo Uploading ZAP scan result to DefectDojo
+          echo $HOME
+          cd $HOME && curl -X POST ${{ parameters.DASHBOARD_URL }}'/api/v2/import-scan/' -H 'accept: application/json' -H 'Authorization: Token 7786e7ff093006dcd2872979fb312b4de6310dd8' -F 'scan_type=ZAP Scan' -F 'engagement=17' -F file=@'report.xml' | jq .
+          echo Scan results uploaded to DefectDojo successfully.
+    - task: Docker@2
+      displayName: Docker logout
+      inputs:
+        command: 'logout'
