@@ -13,7 +13,7 @@ variables:
 
 stages:
 - stage: Build
-  displayName: Build image
+  displayName: DevSecOps
   jobs:  
   - job: Build
     displayName: Build
@@ -21,9 +21,14 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - task: Docker@2
-      displayName: Build an image
+      displayName: Docker login
       inputs:
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-        tags: |
-          $(tag)
+        containerRegistry: 'Docker Hub Service Connection'
+        command: 'login'
+    - task: CmdLine@2
+      displayName: Secret Scan
+      inputs:
+        script: |
+          docker -v
+          
+          echo Hello world
