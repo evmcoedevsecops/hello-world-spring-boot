@@ -95,8 +95,8 @@ stages:
 - stage: CI
   displayName: CI
   jobs:  
-  - job: CISecurityScan
-    displayName: CI-Security Scan
+  - job: CICDSecurityScan
+    displayName: CI/CD-Security Scan
     pool:
       vmImage: ubuntu-latest
     steps:
@@ -129,25 +129,6 @@ stages:
       inputs:
         script: |
           docker run --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e image_name=${{ parameters.APPLICATION_NAME }} ${{ variables.container_scan_image }}
-    - task: Docker@2
-      displayName: Docker logout
-      inputs:
-        command: 'logout'
-          
-- stage: CD
-  displayName: CD
-  dependsOn: CI
-  jobs:  
-  - job: CDSecurityScan
-    displayName: CD-Security Scan
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: Docker@2
-      displayName: Docker login
-      inputs:
-        containerRegistry: 'Docker Hub Service Connection'
-        command: 'login'
     - task: CmdLine@2
       displayName: Platform/Host Scan
       condition: contains('${{ parameters.DEVSECOPS_SERVICE_LIST }}', 'INFRA' )
