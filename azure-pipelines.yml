@@ -29,6 +29,10 @@ parameters:
   - 8
   - 11
 
+- name: IP_ADDRESS
+  type: string
+  default: 127.0.0.1
+
 - name: DAST_AUTH_URL
   type: string
   default: https://demo.testfire.net/login.jsp
@@ -73,6 +77,18 @@ variables:
 - name: secret_scan_image
   value: evmcoe/devsecops:secret_scanning
 
+- name: sca_scan_image
+  value: evmcoe/devsecops:devsecops:sca_owasp_dc
+
+- name: sast_scan_image
+  value: evmcoe/devsecops:sast_spotbugs
+
+- name: container_scan_image
+  value: evmcoe/devsecops:container_scanning_trivy
+
+- name: infra_scan_image
+  value: evmcoe/devsecops:infra_scan_nmap
+
 stages:
 - stage: CI
   displayName: CI
@@ -92,3 +108,23 @@ stages:
       inputs:
         script: |
           docker run --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.secret_scan_image }}
+    - task: CmdLine@2
+      displayName: Software Composition Analysis
+      inputs:
+        script: |
+          docker run --rm --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.sca_scan_image }}
+    - task: CmdLine@2
+      displayName: SAST
+      inputs:
+        script: |
+          docker run --rm --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} ${{ variables.sast_scan_image }}
+    - task: CmdLine@2
+      displayName: Securing Image Build
+      inputs:
+        script: |
+          docker run --rm --network host -e branch=${{ parameters.BRANCH }} -e git_url=${{ parameters.SCM_URL }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} -e scan_start_date=${{ parameters.SCAN_DATE }} -e image_name=${{ parameters.APPLICATION_NAME }} ${{ variables.container_scan_image }}
+    - task: CmdLine@2
+      displayName: Securing Platform/Host
+      inputs:
+        script: |
+          docker run -e ip_address=${{ parameters.IP_ADDRESS }} -e dashboard_url=${{ parameters.DASHBOARD_URL }} --network host ${{ variables.infra_scan_image }}
